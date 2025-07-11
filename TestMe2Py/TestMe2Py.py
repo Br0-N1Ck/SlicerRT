@@ -15,9 +15,15 @@ from slicer.parameterNodeWrapper import (
 )
 
 from slicer import vtkMRMLLinearTransformNode
-#from slicer import vtkMRMLScalarVolumeNode
+from slicer import vtkMRMLScalarVolumeNode
 from slicer import vtkMRMLMarkupsFiducialNode
+from slicer import vtkSegment
+from slicer import vtkSegmentation
+from slicer import vtkMRMLSegmentationNode
+import numpy as np
+
 from vtk import vtkMatrix4x4
+from vtk import vtkCenterOfMass
 
 
 #
@@ -116,6 +122,9 @@ class TestMe2PyParameterNode:
 
     InputTransform: vtkMRMLLinearTransformNode
     InputFiducial: vtkMRMLMarkupsFiducialNode
+    InputSegment: str
+    InputSegmentation: vtkMRMLSegmentationNode
+    InputVolume: vtkMRMLScalarVolumeNode
     HeightSlider: Annotated[float, WithinRange(-100, 100)] = 0
 
 
@@ -171,9 +180,13 @@ class TestMe2PyWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Node ComboBox
         self.ui.InputFiducial.connect("currentNodeChanged(vtkMRMLNode*)", self.onFiducialChanged)
         self.ui.InputTransform.connect("currentNodeChanged(vtkMRMLNode*)", self.onTransformChanged)
+        self.ui.InputSegment.currentSegmentChanged.connect(self.onSegmentChanged)
+        self.ui.InputSegment.connect("currentNodeChanged(vtkMRMLNode*)", self.onSegmentationChanged)
+        self.ui.InputVolume.connect("currentNodeChanged(vtkMRMLNode*)", self.onVolumeChanged)
         # Buttons
         self.ui.CreateButton.connect("clicked(bool)", self.onCreateButton)
-        #Slider
+        self.ui.CenterOfMassButton.connect("clicked(bool)", self.onCenterOfMassButton)
+        #Sliders
         self.ui.HeightSlider.connect("valueChanged(double)", self.onSliderMove)
 
 
@@ -216,6 +229,23 @@ class TestMe2PyWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.HeightSlider.enabled = True
             logging.info('New transform node is valid')
 
+    def onSegmentationChanged(self, newSegmentationNode: None) -> None:
+        if newSegmentationNode:
+            self._parameterNode.InputSegmentation = newSegmentationNode
+            logging.info('New Segmentation node is valid')
+
+    def onSegmentChanged(self, newSegment: None) -> None:
+        if newSegment:
+            self._parameterNode.InputSegment = newSegment
+            self.ui.CenterOfMassButton.enabled = True
+            logging.info('New segment is valid')
+
+    def onVolumeChanged(self, newVolumeNode: None) -> None:
+        if newSegment:
+            self._parameterNode.InputVolume = newVolumeNode
+            self.ui.CenterOfMassButton.enabled = True
+            logging.info('New Volume node is valid')
+
     def initializeParameterNode(self) -> None:
         """Ensure parameter node exists and observed."""
         # Parameter node stores all user choices in parameter values, node selections, etc.
@@ -243,7 +273,6 @@ class TestMe2PyWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.InputFiducial.setCurrentNode(fidNode)
         self._parameterNode.InputFiducial = fidNode
 
-
     def onSliderMove(self, height) -> None:
     #    self._parameterNode.InputTransform = self.ui.InputTransform.currentNode()
         transformNode = self._parameterNode.InputTransform
@@ -251,6 +280,12 @@ class TestMe2PyWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if transformNode is None or fidNode is None:
             logging.warn('Nodes are invalid: Select both Transform and Fiducial')
         self.logic.updateHeight(transformNode, fidNode, height)
+
+    def onCenterOfMassButton(self) -> None:
+        segmentationNode = self._parameterNode.InputSegmentation
+        segment = self._parameterNode.InputSegment
+        self.ui.LabelCenterOfMassValue.text = str(self.logic.centerOfMass(segmentationNode, segment))
+
 
 
 #
@@ -291,6 +326,21 @@ class TestMe2PyLogic(ScriptedLoadableModuleLogic):
         matrixTransfrom = vtk.vtkMatrix4x4()
         matrixTransfrom.SetElement(2,3,height)
         transformNode.SetMatrixTransformToParent(matrixTransfrom)
+
+    def centerOfMass(self, segmentationNode, segment):
+        s = segmentationNode.GetSegmentation()
+        ss = s.GetSegment(segment)
+       # logging.warn(f'SegmentationNode: {segmentationNode}')
+      #  logging.warn(f'Segmentation: {s}')
+        logging.warn(f'Segment should be: {segment}')
+        logging.warn(f'ss is: {ss}')
+        pd = ss.GetRepresentation('Closed surface')
+        com = vtk.vtkCenterOfMass()
+        com.SetInputData(pd)
+        com.Update()
+        com.GetCenter()
+        return com.GetCenter()
+
 
 
 

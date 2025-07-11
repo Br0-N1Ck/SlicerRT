@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>365</width>
-    <height>319</height>
+    <height>435</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,6 +15,89 @@
   </property>
   <layout class="QGridLayout" name="gridLayout_3">
    <item row="2" column="0">
+    <widget class="ctkCollapsibleButton" name="CollapsibleButton">
+     <property name="text">
+      <string>CollapsibleButton</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="1" column="0">
+       <widget class="QPushButton" name="CenterOfMassButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Compute center of mass</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="LabelCenterOfMass">
+          <property name="text">
+           <string>Center of mass:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="LabelCenterOfMassValue">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0">
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="1">
+         <widget class="qMRMLSegmentSelectorWidget" name="InputSegment">
+          <property name="SlicerParameterNode" stdset="0">
+           <string>vtkMRMLSegmentationNode</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="LabelSegment">
+          <property name="text">
+           <string>Segmentation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="qMRMLNodeComboBox" name="InputVolume">
+          <property name="nodeTypes">
+           <stringlist notr="true">
+            <string>vtkMRMLScalarVolumeNode</string>
+           </stringlist>
+          </property>
+          <property name="hideChildNodeTypes">
+           <stringlist notr="true"/>
+          </property>
+          <property name="renameEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="interactionNodeSingletonTag">
+           <string notr="true"/>
+          </property>
+          <property name="SlicerParameterNode" stdset="0">
+           <string>vtkMRMLScalarVolumeNode</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="5" column="0">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -162,10 +245,21 @@
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>qMRMLWidget</class>
+   <extends>QWidget</extends>
+   <header>qMRMLWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>qSlicerWidget</class>
    <extends>QWidget</extends>
    <header>qSlicerWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLSegmentSelectorWidget</class>
+   <extends>qMRMLWidget</extends>
+   <header>qMRMLSegmentSelectorWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -199,6 +293,38 @@
     <hint type="destinationlabel">
      <x>214</x>
      <y>82</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>TestMe2PyModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>InputSegment</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>182</x>
+     <y>217</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>225</x>
+     <y>242</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>TestMe2PyModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>InputVolume</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>182</x>
+     <y>217</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>225</x>
+     <y>280</y>
     </hint>
    </hints>
   </connection>
