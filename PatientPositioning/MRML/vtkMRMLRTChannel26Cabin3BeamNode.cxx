@@ -52,7 +52,7 @@ namespace
 {
 
 constexpr char* const SCANSPOT_REFERENCE_ROLE = "ScanSpotRef";
-constexpr double FWHM_TO_SIGMA = 1. / (2. * sqrt(2. * log(2.)));
+constexpr double FWHM_TO_SIGMA = 0.42466090014400953; // 1 / (2 * sqrt(2 * log(2)))
 
 } // namespace
 
