@@ -48,6 +48,8 @@
 #include <vtkMRMLSliceNode.h>
 #include <vtkMRMLLinearTransformNode.h>
 
+#include <vtkMRMLMarkupsFiducialNode.h>
+
 // Beams inlcudes
 #include <vtkMRMLRTBeamNode.h>
 
@@ -60,6 +62,7 @@
 // VTK includes
 #include <vtkVector.h>
 #include <vtkTransform.h>
+#include <vtkMatrix4x4.h>
 
 //-----------------------------------------------------------------------------
 class qSlicerCarmXrayBeamWidgetPrivate : public Ui_qSlicerCarmXrayBeamWidget
@@ -121,6 +124,8 @@ void qSlicerCarmXrayBeamWidgetPrivate::init()
   QObject::connect( this->PushButton_Down, SIGNAL(clicked()), q, SLOT(onMoveDownClicked()));
   QObject::connect( this->PushButton_Left, SIGNAL(clicked()), q, SLOT(onMoveLeftClicked()));
   QObject::connect( this->PushButton_Right, SIGNAL(clicked()), q, SLOT(onMoveRightClicked()));
+
+  QObject::connect(this->PushButton_IsocenterDiffUpdate, SIGNAL(clicked()), q, SLOT(onIsocenterDiffUpdateClicked()));
 
   q->onTranslateSlidersRangeChanged();
 }
@@ -577,4 +582,101 @@ void qSlicerCarmXrayBeamWidget::onTranslateSlidersRangeChanged()
   qDebug() << Q_FUNC_INFO << "Min: " << min << ", max: " << max;
   d->MRMLMatrixWidget_TransformMatrix->setRange(min, max);
   d->MRMLCoordinatesWidget_TranslatePosition->setRange(min, max);
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerCarmXrayBeamWidget::onIsocenterDiffUpdateClicked()
+{
+    Q_D(qSlicerCarmXrayBeamWidget);
+    if (!d->ParameterNode)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid parameter node";
+        return;
+    }
+
+    // Get patient isocenter
+    double isocenterPatient[4] = { 0, 0, 0, 1 };
+    vtkMRMLRTBeamNode* beamNode = d->ParameterNode->GetBeamNode(); // ion beam node
+
+    if (!beamNode)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid beam node";
+        return;
+    }
+
+    vtkMRMLRTPlanNode* planNode = beamNode->GetParentPlanNode();
+    if (!planNode)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid plan node";
+        return; 
+    }
+    planNode->GetIsocenterPosition(isocenterPatient);
+
+    // Get fixed isocenter
+
+    double isocenterFixed[4] = { 0, 0, 0, 1 };
+    vtkMRMLMarkupsFiducialNode* isocenterFixedNode= d->ParameterNode->GetCabin3IsocenterFiducialNode();
+    if (!isocenterFixedNode)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid or empty isocenter fixed node";
+        return;
+    }
+    isocenterFixedNode->GetNthControlPointPositionWorld(0, isocenterFixed);
+
+    qDebug() << "isocenterPatient:" << isocenterPatient[0] << isocenterPatient[1] << isocenterPatient[2];
+    qDebug() << "isocenterFixed:" << isocenterFixed[0] << isocenterFixed[1] << isocenterFixed[2];
+        
+    // Apply transforms to isocenters
+
+    double isocenterPatient_Fixed[4] = { 0 };
+    double isocenterPatient_TableTop[4] = { 0 };
+    double isocenterPatient_Flange[4] = { 0 };
+
+    double isocenterFixed_Fixed[4] = { 0 };
+    double isocenterFixed_TableTop[4] = { 0 };
+    double isocenterFixed_Flange[4] = { 0 };
+
+    vtkNew<vtkMatrix4x4> transformFixed, transformTableTop, transformFlange;
+
+    d->PatientPositioningLogic->GetChannel26RobotsTransformLogic()->GetFixedReferenceTransform()->GetMatrixTransformFromParent(transformFixed);
+    d->PatientPositioningLogic->GetChannel26RobotsTransformLogic()->GetTableTopTransform()->GetMatrixTransformFromParent(transformTableTop);
+    d->PatientPositioningLogic->GetChannel26RobotsTransformLogic()->GetTableFlangeTransform()->GetMatrixTransformFromParent(transformFlange);
+
+    transformFixed->MultiplyPoint(isocenterPatient, isocenterPatient_Fixed);
+    transformTableTop->MultiplyPoint(isocenterPatient, isocenterPatient_TableTop);
+    transformFlange->MultiplyPoint(isocenterPatient, isocenterPatient_Flange);
+
+    transformFixed->MultiplyPoint(isocenterFixed, isocenterFixed_Fixed);
+    transformTableTop->MultiplyPoint(isocenterFixed, isocenterFixed_TableTop);
+    transformFlange->MultiplyPoint(isocenterFixed, isocenterFixed_Flange);
+
+
+    // Calculate difference
+    double isocenterDiff_Fixed[4] = {
+    isocenterPatient_Fixed[0] - isocenterFixed_Fixed[0],
+    isocenterPatient_Fixed[1] - isocenterFixed_Fixed[1],
+    isocenterPatient_Fixed[2] - isocenterFixed_Fixed[2],
+    1
+    };
+
+    double isocenterDiff_TableTop[4] = {
+    isocenterPatient_TableTop[0] - isocenterFixed_TableTop[0],
+    isocenterPatient_TableTop[1] - isocenterFixed_TableTop[1],
+    isocenterPatient_TableTop[2] - isocenterFixed_TableTop[2],
+    1
+    };
+
+    double isocenterDiff_Flange[4] = {
+    isocenterPatient_Flange[0] - isocenterFixed_Flange[0],
+    isocenterPatient_Flange[1] - isocenterFixed_Flange[1],
+    isocenterPatient_Flange[2] - isocenterFixed_Flange[2],
+    1
+    };
+
+    // Enter into widgets
+
+    d->MRMLCoordinatesWidget_IsocenterDiff_Fixed->setCoordinates(isocenterDiff_Fixed);
+    d->MRMLCoordinatesWidget_IsocenterDiff_TableTop->setCoordinates(isocenterDiff_TableTop);
+    d->MRMLCoordinatesWidget_IsocenterDiff_Flange->setCoordinates(isocenterDiff_Flange);
+
 }

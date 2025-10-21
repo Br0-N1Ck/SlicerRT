@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>506</width>
-    <height>639</height>
+    <width>457</width>
+    <height>597</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,20 +17,13 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="TabWidget_CarmXray">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tabDrr">
       <attribute name="title">
        <string>DRR computation</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_5">
-       <item row="2" column="0">
-        <widget class="QPushButton" name="PushButton_ComputeCarmXrayDrr">
-         <property name="text">
-          <string>Compute DRR</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="0">
         <layout class="QGridLayout" name="gridLayout_6">
          <item row="0" column="0">
@@ -137,6 +130,13 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="2" column="0">
+        <widget class="QPushButton" name="PushButton_ComputeCarmXrayDrr">
+         <property name="text">
+          <string>Compute DRR</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -468,6 +468,153 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabIsocenterDiff">
+      <property name="accessibleName">
+       <string/>
+      </property>
+      <attribute name="title">
+       <string>Isocenter Difference</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_12">
+       <item row="3" column="1">
+        <layout class="QGridLayout" name="gridLayout_13">
+         <item row="2" column="1">
+          <widget class="qMRMLCoordinatesWidget" name="MRMLCoordinatesWidget_IsocenterDiff_TableTop">
+           <property name="normalized">
+            <bool>false</bool>
+           </property>
+           <property name="decimals">
+            <number>5</number>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="quantity">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Flange:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="qMRMLCoordinatesWidget" name="MRMLCoordinatesWidget_IsocenterDiff_Flange">
+           <property name="decimals">
+            <number>5</number>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="quantity">
+            <string notr="true"/>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Coordinate system</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Fixed reference:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Table top:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="qMRMLCoordinatesWidget" name="MRMLCoordinatesWidget_IsocenterDiff_Fixed">
+           <property name="decimals">
+            <number>5</number>
+           </property>
+           <property name="coordinates" stdset="0">
+            <string>0,0,0</string>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="quantity">
+            <string notr="true"/>
+           </property>
+           <property name="unitAwareProperties">
+            <set>qMRMLCoordinatesWidget::MaximumValue|qMRMLCoordinatesWidget::MinimumValue|qMRMLCoordinatesWidget::Precision|qMRMLCoordinatesWidget::Prefix|qMRMLCoordinatesWidget::Suffix</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1,1">
+           <item>
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>X</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>Y</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>Z</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="4" column="1">
+        <widget class="QPushButton" name="PushButton_IsocenterDiffUpdate">
+         <property name="text">
+          <string>Update</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item row="1" column="0">
@@ -486,27 +633,6 @@
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>ctkCheckBox</class>
-   <extends>QCheckBox</extends>
-   <header>ctkCheckBox.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ctkCollapsibleButton</class>
-   <extends>QWidget</extends>
-   <header>ctkCollapsibleButton.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ctkCoordinatesWidget</class>
-   <extends>QWidget</extends>
-   <header>ctkCoordinatesWidget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ctkMatrixWidget</class>
-   <extends>QWidget</extends>
-   <header>ctkMatrixWidget.h</header>
-  </customwidget>
   <customwidget>
    <class>qMRMLCoordinatesWidget</class>
    <extends>ctkCoordinatesWidget</extends>
@@ -544,6 +670,27 @@
    <extends>QWidget</extends>
    <header>qSlicerWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkCheckBox</class>
+   <extends>QCheckBox</extends>
+   <header>ctkCheckBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkCoordinatesWidget</class>
+   <extends>QWidget</extends>
+   <header>ctkCoordinatesWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ctkMatrixWidget</class>
+   <extends>QWidget</extends>
+   <header>ctkMatrixWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>
