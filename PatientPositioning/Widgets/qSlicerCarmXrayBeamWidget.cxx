@@ -64,6 +64,8 @@
 #include <vtkTransform.h>
 #include <vtkMatrix4x4.h>
 
+#include <itkTwoProjectionImageRegistrationMethod.h>
+
 //-----------------------------------------------------------------------------
 class qSlicerCarmXrayBeamWidgetPrivate : public Ui_qSlicerCarmXrayBeamWidget
 {
@@ -276,6 +278,7 @@ void qSlicerCarmXrayBeamWidget::setDrrImageComputationNode(vtkMRMLDrrImageComput
 //-----------------------------------------------------------------------------
 void qSlicerCarmXrayBeamWidget::onComputeDrrClicked()
 {
+  qWarning() << Q_FUNC_INFO << "Tryin' to compute DRR";
   Q_D(qSlicerCarmXrayBeamWidget);
   if (!d->PatientPositioningLogic)
   {
@@ -296,7 +299,15 @@ void qSlicerCarmXrayBeamWidget::onComputeDrrClicked()
     vtkMRMLRTPlanNode* planNode = beamNode->GetParentPlanNode();
     if (planNode)
     {
-      ctInputVolumeNode = planNode->GetReferenceVolumeNode();
+        ctInputVolumeNode = planNode->GetReferenceVolumeNode(); // TODO: Something's wrong here
+      if (ctInputVolumeNode)
+      {
+          qWarning() << "ctInputVolumeNode GET";
+      }
+      else
+      {
+          qWarning() << "!ctInputVolumeNode";
+      }
     }
   }
 //  vtkMRMLScene* scene = d->PatientPositioningLogic->GetMRMLScene();
@@ -324,15 +335,25 @@ void qSlicerCarmXrayBeamWidget::onComputeDrrClicked()
     drrLogic->UpdateMarkupsNodes(drrNode);
     drrLogic->UpdateNormalAndVupVectors(drrNode);
     QApplication::setOverrideCursor(Qt::WaitCursor);
+    qWarning() << "Computing DRR";
 
     vtkMRMLScalarVolumeNode* drrImageNode = drrLogic->ComputePlastimatchDRR( drrNode, ctInputVolumeNode, true);
     if (drrImageNode)
     {
       // node is OK
+        qWarning() << "Computed DRR";
       QApplication::restoreOverrideCursor();
       return;
     }
+    else 
+    {
+        qWarning() << Q_FUNC_INFO << "Didn't compute DRR";
+    }
     QApplication::restoreOverrideCursor();
+  }
+  else
+  {
+      qWarning() << Q_FUNC_INFO << "!drrNode or !ctInputVolumeNode";
   }
 }
 
