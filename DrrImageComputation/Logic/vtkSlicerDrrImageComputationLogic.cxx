@@ -1663,8 +1663,9 @@ bool vtkSlicerDrrImageComputationLogic::GetPlastimatchProjectionMatrix(vtkMRMLDr
 }
 
 //------------------------------------------------------------------------------
-/*
-vtkMRMLLinearTransformNode* vtkSlicerDrrImageComputationLogic::UpdateImageTransformFromBeam(vtkMRMLRTBeamNode* beamNode)
+
+vtkMRMLLinearTransformNode* vtkSlicerDrrImageComputationLogic::UpdateImageTransformFromBeam(vtkMRMLRTBeamNode* beamNode,
+    bool independentBeamFlag)
 {
   if (!beamNode)
   {
@@ -1741,7 +1742,7 @@ vtkMRMLLinearTransformNode* vtkSlicerDrrImageComputationLogic::UpdateImageTransf
   }
   return transformNode;
 }
-*/
+/*
 //------------------------------------------------------------------------------
 vtkMRMLLinearTransformNode* vtkSlicerDrrImageComputationLogic::UpdateImageTransformFromBeam(vtkMRMLRTBeamNode* beamNode,
   bool independentBeamFlag)
@@ -1832,7 +1833,7 @@ vtkMRMLLinearTransformNode* vtkSlicerDrrImageComputationLogic::UpdateImageTransf
   }
   return transformNode;
 }
-
+*/
 //------------------------------------------------------------------------------
 bool vtkSlicerDrrImageComputationLogic::GetRtImageTransformMatrixFromBeam(vtkMRMLRTBeamNode* beamNode, vtkMatrix4x4* mat)
 {
