@@ -74,6 +74,7 @@ public slots:
   void onTranslateSlidersValuesChanged();
   void onTranslateSlidersRangeChanged();
   void onIsocenterDiffUpdateClicked();
+  void onItkRegisterClicked();
 
 signals:
   void registrationRtImagePairChanged(vtkMRMLPatientPositioningNode::CarmProjectionOrientation,

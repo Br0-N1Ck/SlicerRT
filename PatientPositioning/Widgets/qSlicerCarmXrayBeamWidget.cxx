@@ -65,6 +65,11 @@
 #include <vtkMatrix4x4.h>
 
 #include <itkTwoProjectionImageRegistrationMethod.h>
+#include <itkPowellOptimizer.h>
+#include <itkNormalizedCorrelationImageToImageMetric.h>
+//#include <itkRigid2D3DTransform.h>
+
+#include <itkVTKImageToImageFilter.h>
 
 //-----------------------------------------------------------------------------
 class qSlicerCarmXrayBeamWidgetPrivate : public Ui_qSlicerCarmXrayBeamWidget
@@ -128,6 +133,8 @@ void qSlicerCarmXrayBeamWidgetPrivate::init()
   QObject::connect( this->PushButton_Right, SIGNAL(clicked()), q, SLOT(onMoveRightClicked()));
 
   QObject::connect(this->PushButton_IsocenterDiffUpdate, SIGNAL(clicked()), q, SLOT(onIsocenterDiffUpdateClicked()));
+
+  QObject::connect(this->PushButton_ItkRegister, SIGNAL(clicked()), q, SLOT(onItkRegisterClicked()));
 
   q->onTranslateSlidersRangeChanged();
 }
@@ -700,4 +707,65 @@ void qSlicerCarmXrayBeamWidget::onIsocenterDiffUpdateClicked()
     d->MRMLCoordinatesWidget_IsocenterDiff_TableTop->setCoordinates(isocenterDiff_TableTop);
     d->MRMLCoordinatesWidget_IsocenterDiff_Flange->setCoordinates(isocenterDiff_Flange);
 
+}
+
+void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
+{
+    Q_D(qSlicerCarmXrayBeamWidget);
+    if (!d->ParameterNode)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid parameter node";
+        return;
+    }
+    vtkMRMLScalarVolumeNode* ctNode = vtkMRMLScalarVolumeNode::SafeDownCast(d->MRMLNodeComboBox_CTNode->currentNode());
+    if (!ctNode)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid CT node";
+        return;
+    }
+    vtkMRMLScalarVolumeNode* drrImageNode_1 = vtkMRMLScalarVolumeNode::SafeDownCast(d->MRMLNodeComboBox_DrrImageNode_1->currentNode());
+    if (!drrImageNode_1)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid DRR image 1 node";
+        return;
+    }
+    vtkMRMLScalarVolumeNode* drrImageNode_2 = vtkMRMLScalarVolumeNode::SafeDownCast(d->MRMLNodeComboBox_DrrImageNode_2->currentNode());
+    if (!drrImageNode_2)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid DRR image 2 node";
+        return;
+    }
+
+    // Convert to ITK Image< PixelType, Dimension >
+
+    // CT (Moving) Image
+    using MovingImageType = itk::Image<float, 3>;
+
+    
+    vtkImageData* ctVtkImage = ctNode->GetImageData();
+
+    using Moving_VTKToITKFilterType = itk::VTKImageToImageFilter<MovingImageType>;
+    auto moving_vtkToItkFilter = Moving_VTKToITKFilterType::New();
+
+    moving_vtkToItkFilter->SetInput(ctVtkImage);
+
+    moving_vtkToItkFilter->Update();
+
+    MovingImageType::Pointer movingItkImage = moving_vtkToItkFilter->GetOutput();
+
+    // DRR (Fixed) Images
+    using FixedImageType = itk::Image<float, 2>;
+    vtkImageData* drrVtkImage_1 = drrImageNode_1->GetImageData();
+    vtkImageData* drrVtkImage_2 = drrImageNode_2->GetImageData();
+    using Fixed_VTKToITKFilterType = itk::VTKImageToImageFilter<FixedImageType>;
+    auto fixed_vtkToItkFilter_1 = Fixed_VTKToITKFilterType::New();
+    auto fixed_vtkToItkFilter_2 = Fixed_VTKToITKFilterType::New();
+    fixed_vtkToItkFilter_1->SetInput(drrVtkImage_1);
+    fixed_vtkToItkFilter_2->SetInput(drrVtkImage_2);
+    fixed_vtkToItkFilter_1->Update();
+    fixed_vtkToItkFilter_2->Update();
+    FixedImageType::Pointer fixedItkImage_1 = fixed_vtkToItkFilter_1->GetOutput();
+    FixedImageType::Pointer fixedItkImage_2 = fixed_vtkToItkFilter_2->GetOutput();
+
+    // TODO: Instantiate registration method, optimizer, metric, etc.
 }
