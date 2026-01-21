@@ -64,6 +64,7 @@
 #include <vtkTransform.h>
 #include <vtkMatrix4x4.h>
 
+#include <vtkTimerLog.h>
 #include <vtkImageCast.h>
 
 // ITK includes
@@ -752,7 +753,6 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
         return;
     }
 
-    qDebug() << Q_FUNC_INFO << "Debug 0";
 
     // Convert to ITK Image< PixelType, Dimension >
 
@@ -769,7 +769,6 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
 
     // CT (Moving) Image
 
-    // Temporary variables
     double spacing[3];
     
     vtkImageData* ctVtkImage = ctNode->GetImageData();
@@ -789,7 +788,6 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
 
     ImageType3D::Pointer movingItkImage = moving_vtkToItkFilter->GetOutput();
 
-    qDebug() << Q_FUNC_INFO << "Debug 1";
 
     
     ctNode->GetSpacing(spacing);
@@ -834,12 +832,8 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
     drrImageNode_1->GetSpacing(spacing);
     fixedItkImage_1->SetSpacing(spacing);
 
-
     drrImageNode_2->GetSpacing(spacing);
     fixedItkImage_2->SetSpacing(spacing);
-
-
-
 
     // The following lines define each of the components used in the
     // registration: The transform, optimizer, metric, interpolator and
@@ -860,7 +854,6 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
 
     // Each of the registration components are instantiated in the
     // usual way...
-    qDebug() << Q_FUNC_INFO << "Debug 2";
 
     MetricType::Pointer       metric = MetricType::New();
     TransformType::Pointer    transform = TransformType::New();
@@ -880,7 +873,32 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
     registration->SetInterpolator1(interpolator1);
     registration->SetInterpolator2(interpolator2);
 
-      //  The 3D CT dataset is casted to the internal image type using
+    // The input 2D images were loaded as 3D images. They were considered
+    // as a single slice from a 3D volume. By default, images stored on the
+    // disk are treated as if they have RAI orientation. After view point
+    // transformation, the order of 2D image pixel reading is equivalent to
+    // from inferior to superior. This is contradictory to the traditional
+    // 2D x-ray image storage, in which a typical 2D image reader reads and
+    // writes images from superior to inferior. Thus the loaded 2D DICOM
+    // images should be flipped in y-direction. This was done by using a.
+    // FilpImageFilter.
+    using FlipFilterType = itk::FlipImageFilter<InternalImageType>;
+    FlipFilterType::Pointer flipFilter1 = FlipFilterType::New();
+    FlipFilterType::Pointer flipFilter2 = FlipFilterType::New();
+
+    using FlipAxesArrayType = FlipFilterType::FlipAxesArrayType;
+    FlipAxesArrayType flipArray;
+    flipArray[0] = false;
+    flipArray[1] = true;
+    flipArray[2] = false;
+
+    flipFilter1->SetFlipAxes(flipArray);
+    flipFilter2->SetFlipAxes(flipArray);
+
+    flipFilter1->SetInput(fixedItkImage_1);
+    flipFilter2->SetInput(fixedItkImage_2);
+
+    //  The 3D CT dataset is casted to the internal image type using
     //  {CastImageFilters}.
 
     using CastFilterType3D = itk::CastImageFilter<ImageType3D, InternalImageType>;
@@ -889,19 +907,28 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
     caster3D->SetInput(movingItkImage);
     caster3D->Update();
   
-    registration->SetFixedImage1(fixedItkImage_1);
-    registration->SetFixedImage2(fixedItkImage_2);
+    registration->SetFixedImage1(flipFilter1->GetOutput());
+    registration->SetFixedImage2(flipFilter2->GetOutput());
     registration->SetMovingImage(caster3D->GetOutput());
+
+    metric->DebugOn();
+    transform->DebugOn();
+    optimizer->DebugOn();
+    interpolator1->DebugOn();
+    interpolator2->DebugOn();
+    registration->DebugOn();
 
 
 
     // Initialise transform
+    transform->SetComputeZYX(true);
+
     TransformType::ParametersType initialParameters(
       transform->GetNumberOfParameters());
     initialParameters.Fill(0.0);
     
     transform->SetParameters(initialParameters);
-    //transform->SetFixedParameters(transform->GetFixedParameters()); // Is it needed?
+    //transform->SetFixedParameters(transform->GetFixedParameters());
 
     // Set transform center
     InternalImageType::PointType center;
@@ -917,7 +944,8 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
 
     transform->SetCenter(center);
 
-    qDebug() << Q_FUNC_INFO << "Debug 3";
+    std::cout << "Transform: " << transform << std::endl;
+
 
     // Initialize the ray cast interpolator
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -994,7 +1022,6 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
     origin2D1[1] = -resolution2D1[1] * image1centerY;
     origin2D1[2] = -scd;
 
-    //imageReader2D1->GetOutput()->SetOrigin(origin2D1);
     //rescaler2D1->GetOutput()->SetOrigin(origin2D1);
     fixedItkImage_1->SetOrigin(origin2D1);
 
@@ -1003,12 +1030,31 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
     origin2D2[1] = -resolution2D2[1] * image2centerY;
     origin2D2[2] = -scd;
 
-    //imageReader2D2->GetOutput()->SetOrigin(origin2D2);
     //rescaler2D2->GetOutput()->SetOrigin(origin2D2);
     fixedItkImage_2->SetOrigin(origin2D2);
 
     registration->SetFixedImageRegion1(fixedItkImage_1->GetBufferedRegion());
     registration->SetFixedImageRegion2(fixedItkImage_2->GetBufferedRegion());
+
+    qDebug() << "CT Image properties:";
+    qDebug() << "  Size:" << size[0] << size[1] << size[2];
+    qDebug() << "  Spacing:" << spacing[0] << spacing[1] << spacing[2];
+    qDebug() << "  Origin:" << movingItkImage->GetOrigin()[0] 
+            << movingItkImage->GetOrigin()[1] 
+            << movingItkImage->GetOrigin()[2];
+
+    qDebug() << "DRR Image 1 properties:";
+    qDebug() << "  Size:" << size2D1[0] << size2D1[1];
+    qDebug() << "  Spacing:" << resolution2D1[0] << resolution2D1[1];
+    qDebug() << "  Origin:" << fixedItkImage_1->GetOrigin()[0]
+            << fixedItkImage_1->GetOrigin()[1] 
+            << fixedItkImage_1->GetOrigin()[2];
+    qDebug() << "DRR Image 2 properties:";
+    qDebug() << "  Size:" << size2D2[0] << size2D2[1];
+    qDebug() << "  Spacing:" << resolution2D2[0] << resolution2D2[1];
+    qDebug() << "  Origin:" << fixedItkImage_2->GetOrigin()[0]
+            << fixedItkImage_2->GetOrigin()[1] 
+            << fixedItkImage_2->GetOrigin()[2];
 
 
     // Set up the transform and start position
@@ -1026,10 +1072,9 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
 
     optimizer->SetMaximumIteration(10);
     optimizer->SetMaximumLineIteration(4); // for Powell's method
-    optimizer->SetStepLength(4.0);
+    optimizer->SetStepLength(4);
     optimizer->SetStepTolerance(0.02);
     optimizer->SetValueTolerance(0.001);
-    qDebug() << Q_FUNC_INFO << "Debug 4";
 
     // The optimizer weightings are set such that one degree equates to
     // one millimeter.
@@ -1045,26 +1090,53 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
 
     optimizer->SetScales(weightings);
 
+    optimizer->Print( std::cout );
+
     // Run registration
     try
     {
-      qDebug() << Q_FUNC_INFO << "Debug 5";
+      QApplication::setOverrideCursor(Qt::WaitCursor);
       registration->StartRegistration();
+      QApplication::restoreOverrideCursor();
     }
     catch (itk::ExceptionObject& err)
     {
+      QApplication::restoreOverrideCursor();
       qCritical() << err.what();
       return;
     }
+    // Print registration results
+    using ParametersType = RegistrationType::ParametersType;
+    ParametersType finalParameters = registration->GetLastTransformParameters();
 
-    // Create transform node from result
-    vtkNew<vtkMatrix4x4> vtkMatrix;
-    transform->GetMatrix().GetVnlMatrix().copy_out(vtkMatrix->GetData());
+    const double RotationAlongX = finalParameters[0] / dtr; // Convert radian to degree
+    const double RotationAlongY = finalParameters[1] / dtr;
+    const double RotationAlongZ = finalParameters[2] / dtr;
+    const double TranslationAlongX = finalParameters[3];
+    const double TranslationAlongY = finalParameters[4];
+    const double TranslationAlongZ = finalParameters[5];
 
-    vtkNew<vtkMRMLLinearTransformNode> transformNode;
-    transformNode->SetMatrixTransformToParent(vtkMatrix);
-    transformNode->SetName("RegistrationTransform");
+    const int numberOfIterations = optimizer->GetCurrentIteration();
 
-    vtkMRMLScene* scene = this->mrmlScene();
-    scene->AddNode(transformNode);
+    const double bestValue = optimizer->GetValue();
+
+    qInfo() << "Result = ";
+    qInfo() << " Rotation Along X = " << RotationAlongX << " deg";
+    qInfo() << " Rotation Along Y = " << RotationAlongY << " deg";
+    qInfo() << " Rotation Along Z = " << RotationAlongZ << " deg";
+    qInfo() << " Translation X = " << TranslationAlongX << " mm";
+    qInfo() << " Translation Y = " << TranslationAlongY << " mm";
+    qInfo() << " Translation Z = " << TranslationAlongZ << " mm";
+    qInfo() << " Number Of Iterations = " << numberOfIterations;
+    qInfo() << " Metric value  = " << bestValue;
+
+    // TODO: Create transform node from result
+
+    // vtkNew<vtkMatrix4x4> vtkMatrix;
+
+    // vtkNew<vtkMRMLLinearTransformNode> transformNode;
+    // transformNode->SetName("RegistrationTransform");
+
+    // vtkMRMLScene* scene = this->mrmlScene();
+    // scene->AddNode(transformNode);
 }

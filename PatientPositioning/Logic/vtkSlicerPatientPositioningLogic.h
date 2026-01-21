@@ -130,6 +130,8 @@ public:
     vtkMRMLScalarVolumeNode* xrayImageVolume);
   /// Get default registration transform node (hidden from SH and editor)
   vtkMRMLLinearTransformNode* GetDefaultRegistrationTransformNode();
+  /// Create registration transform node between CT and two Xray images
+  vtkMatrix4x4* CreateRegistrationTransformNode(vtkMRMLScalarVolumeNode* ctNode, vtkMRMLScalarVolumeNode* xrayNode1, vtkMRMLScalarVolumeNode* xrayNode2);
 
 public:
   // Get treatment machine properties from descriptor file
