@@ -1895,7 +1895,7 @@ vtkSlicerChannel26Cabin3RobotsTransformLogic* vtkSlicerPatientPositioningLogic::
 }
 
 //---------------------------------------------------------------------------
-vtkMatrix4x4* vtkSlicerPatientPositioningLogic::CreateRegistrationTransformNode(vtkMRMLScalarVolumeNode* ctNode, vtkMRMLScalarVolumeNode* xrayNode1, vtkMRMLScalarVolumeNode* xrayNode2)
+vtkMRMLLinearTransformNode* vtkSlicerPatientPositioningLogic::ITKTwoProjectionRegistration(vtkMRMLScalarVolumeNode* ctNode, vtkMRMLScalarVolumeNode* xrayNode1, vtkMRMLScalarVolumeNode* xrayNode2)
 {
   // Convert to ITK Image< PixelType, Dimension >
 
@@ -2019,7 +2019,7 @@ vtkMatrix4x4* vtkSlicerPatientPositioningLogic::CreateRegistrationTransformNode(
   registration->SetInterpolator1(interpolator1);
   registration->SetInterpolator2(interpolator2);
 
-      // The input 2D images were loaded as 3D images. They were considered
+  // The input 2D images were loaded as 3D images. They were considered
   // as a single slice from a 3D volume. By default, images stored on the
   // disk are treated as if they have RAI orientation. After view point
   // transformation, the order of 2D image pixel reading is equivalent to
@@ -2044,7 +2044,7 @@ vtkMatrix4x4* vtkSlicerPatientPositioningLogic::CreateRegistrationTransformNode(
   flipFilter1->SetInput(fixedItkImage_1);
   flipFilter2->SetInput(fixedItkImage_2);
 
-    //  The 3D CT dataset is casted to the internal image type using
+  //  The 3D CT dataset is casted to the internal image type using
   //  {CastImageFilters}.
 
   using CastFilterType3D = itk::CastImageFilter<ImageType3D, InternalImageType>;
@@ -2053,8 +2053,8 @@ vtkMatrix4x4* vtkSlicerPatientPositioningLogic::CreateRegistrationTransformNode(
   caster3D->SetInput(movingItkImage);
   caster3D->Update();
 
-  registration->SetFixedImage1(flipFilter1->GetOutput());
-  registration->SetFixedImage2(flipFilter2->GetOutput());
+  registration->SetFixedImage1(fixedItkImage_1);
+  registration->SetFixedImage2(fixedItkImage_2);
   registration->SetMovingImage(caster3D->GetOutput());
 
 
@@ -2175,6 +2175,20 @@ vtkMatrix4x4* vtkSlicerPatientPositioningLogic::CreateRegistrationTransformNode(
   registration->SetFixedImageRegion1(fixedItkImage_1->GetBufferedRegion());
   registration->SetFixedImageRegion2(fixedItkImage_2->GetBufferedRegion());
 
+  std::cout << "CT Image properties:" << endl;
+  std::cout << "  Size: " << size[0] << ", " << size[1] << ", " << size[2] << endl;
+  std::cout << "  Spacing: " << spacing[0] << ", " << spacing[1] << ", " << spacing[2] << endl;
+  std::cout << "  Origin: " << movingItkImage->GetOrigin()[0] << ", "
+      << movingItkImage->GetOrigin()[1] << ", "
+      << movingItkImage->GetOrigin()[2] << endl;
+
+  std::cout << "DRR Image 1 properties:" << endl;
+  std::cout << "  Size: " << size2D1[0] << ", " << size2D1[1] << endl;
+  std::cout << "  Spacing: " << resolution2D1[0] << ", " << resolution2D1[1] << endl;
+  std::cout << "  Origin: " << fixedItkImage_1->GetOrigin()[0] << ", "
+      << fixedItkImage_1->GetOrigin()[1] << ", "
+      << fixedItkImage_1->GetOrigin()[2] << endl;
+
 
   // Set up the transform and start position
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2239,20 +2253,22 @@ vtkMatrix4x4* vtkSlicerPatientPositioningLogic::CreateRegistrationTransformNode(
 
   const double bestValue = optimizer->GetValue();
 
-  vtkInfoMacro("Result: ");
-  vtkInfoMacro(" Rotation Along X = " << RotationAlongX << " deg");
-  vtkInfoMacro(" Rotation Along Y = " << RotationAlongY << " deg");
-  vtkInfoMacro(" Rotation Along Z = " << RotationAlongZ << " deg");
-  vtkInfoMacro(" Translation X = " << TranslationAlongX << " mm");
-  vtkInfoMacro(" Translation Y = " << TranslationAlongY << " mm");
-  vtkInfoMacro(" Translation Z = " << TranslationAlongZ << " mm");
-  vtkInfoMacro(" Number Of Iterations = " << numberOfIterations);
-  vtkInfoMacro(" Metric value  = " << bestValue);
+  std::cout << "Result = " << std::endl;
+  std::cout << " Rotation Along X = " << RotationAlongX << " deg" << std::endl;
+  std::cout << " Rotation Along Y = " << RotationAlongY << " deg" << std::endl;
+  std::cout << " Rotation Along Z = " << RotationAlongZ << " deg" << std::endl;
+  std::cout << " Translation X = " << TranslationAlongX << " mm" << std::endl;
+  std::cout << " Translation Y = " << TranslationAlongY << " mm" << std::endl;
+  std::cout << " Translation Z = " << TranslationAlongZ << " mm" << std::endl;
+  std::cout << " Number Of Iterations = " << numberOfIterations << std::endl;
+  std::cout << " Metric value  = " << bestValue << std::endl;
 
-  // Create transform node from result
-  vtkNew<vtkMatrix4x4> vtkMatrix;
+  // TODO: Create transform node from result
+  
+  //vtkNew<vtkMatrix4x4> vtkMatrix;
 
+  vtkNew<vtkMRMLLinearTransformNode> transformNode;
+  transformNode->SetName("RegistrationTransform");
 
-
-  return vtkMatrix;
+  return transformNode;
 }
