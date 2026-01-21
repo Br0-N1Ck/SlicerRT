@@ -115,12 +115,14 @@ if (SLICERRT_ENABLE_EXPERIMENTAL_MODULES)
   add_subdirectory(PlmVectorFieldAnalysis)
 # Patient Positioning
   add_subdirectory(PatientPositioning)
+  add_subdirectory(ITK2ProjRegPy)
 #  add_subdirectory(MlcControl)
 
 endif()
 
 if(BUILD_TESTING)
   add_subdirectory(Testing)
+  
 endif()
 
 #-----------------------------------------------------------------------------

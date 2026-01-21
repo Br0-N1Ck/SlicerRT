@@ -64,6 +64,22 @@
 #include <vtkTransform.h>
 #include <vtkMatrix4x4.h>
 
+#include <vtkImageCast.h>
+
+// ITK includes
+#include <itkResampleImageFilter.h>
+#include <itkCastImageFilter.h>
+#include <itkRescaleIntensityImageFilter.h>
+#include <itkFlipImageFilter.h>
+
+
+#include <itkEuler3DTransform.h>
+#include <itkNormalizedCorrelationTwoImageToOneImageMetric.h>
+
+// This is an intensity based registration algorithm so ray casting is
+// used to project the 3D volume onto pixels in the target 2D image.
+#include <itkSiddonJacobsRayCastInterpolateImageFunction.h>
+
 #include <itkTwoProjectionImageRegistrationMethod.h>
 #include <itkPowellOptimizer.h>
 #include <itkNormalizedCorrelationImageToImageMetric.h>
@@ -736,36 +752,319 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
         return;
     }
 
+    qDebug() << Q_FUNC_INFO << "Debug 0";
+
     // Convert to ITK Image< PixelType, Dimension >
 
-    // CT (Moving) Image
-    using MovingImageType = itk::Image<float, 3>;
+    constexpr unsigned int Dimension = 3;
+    using InternalPixelType = float;
+    using PixelType3D = short;
 
+    using ImageType3D = itk::Image<PixelType3D, Dimension>;
+
+    using OutputPixelType = unsigned char;
+    using OutputImageType = itk::Image<OutputPixelType, Dimension>;
+
+    using InternalImageType = itk::Image<InternalPixelType, Dimension>;
+
+    // CT (Moving) Image
+
+    // Temporary variables
+    double spacing[3];
     
     vtkImageData* ctVtkImage = ctNode->GetImageData();
 
-    using Moving_VTKToITKFilterType = itk::VTKImageToImageFilter<MovingImageType>;
+    using Moving_VTKToITKFilterType = itk::VTKImageToImageFilter<ImageType3D>;
     auto moving_vtkToItkFilter = Moving_VTKToITKFilterType::New();
 
-    moving_vtkToItkFilter->SetInput(ctVtkImage);
+    vtkNew<vtkImageCast> vtkCaster3D;
+    vtkCaster3D->SetInputData(ctVtkImage);
+    vtkCaster3D->SetOutputScalarTypeToShort();
+    vtkCaster3D->Update();
 
+    vtkImageData* floatVtkImage = vtkCaster3D->GetOutput();
+
+    moving_vtkToItkFilter->SetInput(floatVtkImage);
     moving_vtkToItkFilter->Update();
 
-    MovingImageType::Pointer movingItkImage = moving_vtkToItkFilter->GetOutput();
+    ImageType3D::Pointer movingItkImage = moving_vtkToItkFilter->GetOutput();
+
+    qDebug() << Q_FUNC_INFO << "Debug 1";
+
+    
+    ctNode->GetSpacing(spacing);
+    movingItkImage->SetSpacing(spacing);
+
+    // To simply Siddon-Jacob's fast ray-tracing algorithm, we force the origin of the CT image
+    // to be (0,0,0). Because we align the CT isocenter with the central axis, the projection
+    // geometry is fully defined. The origin of the CT image becomes irrelavent.
+    ImageType3D::PointType image3DOrigin;
+    image3DOrigin[0] = 0.0;
+    image3DOrigin[1] = 0.0;
+    image3DOrigin[2] = 0.0;
+    movingItkImage->SetOrigin(image3DOrigin);
+
+
 
     // DRR (Fixed) Images
-    using FixedImageType = itk::Image<float, 2>;
     vtkImageData* drrVtkImage_1 = drrImageNode_1->GetImageData();
+    // Cast to float
+    vtkNew<vtkImageCast> drrCaster1;
+    drrCaster1->SetInputData(drrVtkImage_1);
+    drrCaster1->SetOutputScalarTypeToFloat();
+    drrCaster1->Update();
+    
     vtkImageData* drrVtkImage_2 = drrImageNode_2->GetImageData();
-    using Fixed_VTKToITKFilterType = itk::VTKImageToImageFilter<FixedImageType>;
+    vtkNew<vtkImageCast> drrCaster2;
+    drrCaster2->SetInputData(drrVtkImage_2);
+    drrCaster2->SetOutputScalarTypeToFloat();
+    drrCaster2->Update();
+
+    using Fixed_VTKToITKFilterType = itk::VTKImageToImageFilter<InternalImageType>;
+
     auto fixed_vtkToItkFilter_1 = Fixed_VTKToITKFilterType::New();
     auto fixed_vtkToItkFilter_2 = Fixed_VTKToITKFilterType::New();
-    fixed_vtkToItkFilter_1->SetInput(drrVtkImage_1);
-    fixed_vtkToItkFilter_2->SetInput(drrVtkImage_2);
+    fixed_vtkToItkFilter_1->SetInput(drrCaster1->GetOutput());
     fixed_vtkToItkFilter_1->Update();
+    InternalImageType::Pointer fixedItkImage_1 = fixed_vtkToItkFilter_1->GetOutput();
+    fixed_vtkToItkFilter_2->SetInput(drrCaster2->GetOutput());
     fixed_vtkToItkFilter_2->Update();
-    FixedImageType::Pointer fixedItkImage_1 = fixed_vtkToItkFilter_1->GetOutput();
-    FixedImageType::Pointer fixedItkImage_2 = fixed_vtkToItkFilter_2->GetOutput();
+    InternalImageType::Pointer fixedItkImage_2 = fixed_vtkToItkFilter_2->GetOutput();
 
-    // TODO: Instantiate registration method, optimizer, metric, etc.
+    drrImageNode_1->GetSpacing(spacing);
+    fixedItkImage_1->SetSpacing(spacing);
+
+
+    drrImageNode_2->GetSpacing(spacing);
+    fixedItkImage_2->SetSpacing(spacing);
+
+
+
+
+    // The following lines define each of the components used in the
+    // registration: The transform, optimizer, metric, interpolator and
+    // the registration method itself.
+
+    using TransformType = itk::Euler3DTransform<double>;
+
+    using OptimizerType = itk::PowellOptimizer;
+
+    // using MetricType = itk::GradientDifferenceTwoImageToOneImageMetric<
+    using MetricType = itk::NormalizedCorrelationTwoImageToOneImageMetric<InternalImageType, InternalImageType>;
+
+    using InterpolatorType = itk::SiddonJacobsRayCastInterpolateImageFunction<InternalImageType, double>;
+
+
+    using RegistrationType = itk::TwoProjectionImageRegistrationMethod<InternalImageType, InternalImageType>;
+
+
+    // Each of the registration components are instantiated in the
+    // usual way...
+    qDebug() << Q_FUNC_INFO << "Debug 2";
+
+    MetricType::Pointer       metric = MetricType::New();
+    TransformType::Pointer    transform = TransformType::New();
+    OptimizerType::Pointer    optimizer = OptimizerType::New();
+    InterpolatorType::Pointer interpolator1 = InterpolatorType::New();
+    InterpolatorType::Pointer interpolator2 = InterpolatorType::New();
+    RegistrationType::Pointer registration = RegistrationType::New();
+
+    metric->ComputeGradientOff();
+    metric->SetSubtractMean(true);
+
+    // and passed to the registration method:
+
+    registration->SetMetric(metric);
+    registration->SetOptimizer(optimizer);
+    registration->SetTransform(transform);
+    registration->SetInterpolator1(interpolator1);
+    registration->SetInterpolator2(interpolator2);
+
+      //  The 3D CT dataset is casted to the internal image type using
+    //  {CastImageFilters}.
+
+    using CastFilterType3D = itk::CastImageFilter<ImageType3D, InternalImageType>;
+
+    CastFilterType3D::Pointer caster3D = CastFilterType3D::New();
+    caster3D->SetInput(movingItkImage);
+    caster3D->Update();
+  
+    registration->SetFixedImage1(fixedItkImage_1);
+    registration->SetFixedImage2(fixedItkImage_2);
+    registration->SetMovingImage(caster3D->GetOutput());
+
+
+
+    // Initialise transform
+    TransformType::ParametersType initialParameters(
+      transform->GetNumberOfParameters());
+    initialParameters.Fill(0.0);
+    
+    transform->SetParameters(initialParameters);
+    //transform->SetFixedParameters(transform->GetFixedParameters()); // Is it needed?
+
+    // Set transform center
+    InternalImageType::PointType center;
+    auto region = movingItkImage->GetLargestPossibleRegion();
+    auto size   = region.GetSize();
+
+    for (int i = 0; i < 3; ++i)
+    {
+      center[i] =
+        movingItkImage->GetOrigin()[i] +
+        movingItkImage->GetSpacing()[i] * size[i] / 2.0;
+    }
+
+    transform->SetCenter(center);
+
+    qDebug() << Q_FUNC_INFO << "Debug 3";
+
+    // Initialize the ray cast interpolator
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // The ray cast interpolator is used to project the 3D volume. It
+    // does this by casting rays from the (transformed) focal point to
+    // each (transformed) pixel coordinate in the 2D image.
+    //
+    // In addition a threshold may be specified to ensure that only
+    // intensities greater than a given value contribute to the
+    // projected volume. This can be used, for instance, to remove soft
+    // tissue from projections of CT data and force the registration
+    // to find a match which aligns bony structures in the images.
+
+    // constant for converting degrees to radians
+    const double dtr = (atan(1.0) * 4.0) / 180.0;
+    const double projAngle1 = 0;
+    const double projAngle2 = 90;
+    const double scd = 1000.;
+    const double threshold = 0;
+
+    // 2D Image 1
+    interpolator1->SetProjectionAngle(dtr * projAngle1);
+    interpolator1->SetFocalPointToIsocenterDistance(scd);
+    interpolator1->SetThreshold(threshold);
+    interpolator1->SetTransform(transform);
+
+    interpolator1->Initialize();
+
+    // 2D Image 2
+    interpolator2->SetProjectionAngle(dtr * projAngle2);
+    interpolator2->SetFocalPointToIsocenterDistance(scd);
+    interpolator2->SetThreshold(threshold);
+    interpolator2->SetTransform(transform);
+
+    interpolator2->Initialize();
+
+
+    // Set the origin of the 2D image
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    double origin2D1[Dimension];
+    double origin2D2[Dimension];
+
+    // Note: Two 2D images may have different image sizes and pixel dimensions, although
+    // scd are the same.
+
+    const itk::Vector<double, 3> resolution2D1 = fixedItkImage_1->GetSpacing();
+    const itk::Vector<double, 3> resolution2D2 = fixedItkImage_2->GetSpacing();
+
+    using ImageRegionType2D = InternalImageType::RegionType;
+    using SizeType2D = ImageRegionType2D::SizeType;
+
+    ImageRegionType2D region2D1 = fixedItkImage_1->GetBufferedRegion();
+    ImageRegionType2D region2D2 = fixedItkImage_2->GetBufferedRegion();
+    SizeType2D        size2D1 = region2D1.GetSize();
+    SizeType2D        size2D2 = region2D2.GetSize();
+
+    double image1centerX = 0.0;
+    double image1centerY = 0.0;
+    double image2centerX = 0.0;
+    double image2centerY = 0.0;
+
+    // Central axis positions are not given by the user. Use the image centers
+         // as the central axis position.
+    image1centerX = ((double)size2D1[0] - 1.) / 2.;
+    image1centerY = ((double)size2D1[1] - 1.) / 2.;
+    image2centerX = ((double)size2D2[0] - 1.) / 2.;
+    image2centerY = ((double)size2D2[1] - 1.) / 2.;
+
+
+    // 2D Image 1
+    origin2D1[0] = -resolution2D1[0] * image1centerX;
+    origin2D1[1] = -resolution2D1[1] * image1centerY;
+    origin2D1[2] = -scd;
+
+    //imageReader2D1->GetOutput()->SetOrigin(origin2D1);
+    //rescaler2D1->GetOutput()->SetOrigin(origin2D1);
+    fixedItkImage_1->SetOrigin(origin2D1);
+
+    // 2D Image 2
+    origin2D2[0] = -resolution2D2[0] * image2centerX;
+    origin2D2[1] = -resolution2D2[1] * image2centerY;
+    origin2D2[2] = -scd;
+
+    //imageReader2D2->GetOutput()->SetOrigin(origin2D2);
+    //rescaler2D2->GetOutput()->SetOrigin(origin2D2);
+    fixedItkImage_2->SetOrigin(origin2D2);
+
+    registration->SetFixedImageRegion1(fixedItkImage_1->GetBufferedRegion());
+    registration->SetFixedImageRegion2(fixedItkImage_2->GetBufferedRegion());
+
+
+    // Set up the transform and start position
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // The registration start position is intialised using the
+    // transformation parameters.
+
+    registration->SetInitialTransformParameters(transform->GetParameters());
+
+    // We wish to minimize the negative normalized correlation similarity measure.
+
+    // optimizer->SetMaximize( true );  // for GradientDifferenceTwoImageToOneImageMetric
+    optimizer->SetMaximize(false); // for NCC
+
+    optimizer->SetMaximumIteration(10);
+    optimizer->SetMaximumLineIteration(4); // for Powell's method
+    optimizer->SetStepLength(4.0);
+    optimizer->SetStepTolerance(0.02);
+    optimizer->SetValueTolerance(0.001);
+    qDebug() << Q_FUNC_INFO << "Debug 4";
+
+    // The optimizer weightings are set such that one degree equates to
+    // one millimeter.
+
+    itk::Optimizer::ScalesType weightings(transform->GetNumberOfParameters());
+
+    weightings[0] = 1. / dtr;
+    weightings[1] = 1. / dtr;
+    weightings[2] = 1. / dtr;
+    weightings[3] = 1.;
+    weightings[4] = 1.;
+    weightings[5] = 1.;
+
+    optimizer->SetScales(weightings);
+
+    // Run registration
+    try
+    {
+      qDebug() << Q_FUNC_INFO << "Debug 5";
+      registration->StartRegistration();
+    }
+    catch (itk::ExceptionObject& err)
+    {
+      qCritical() << err.what();
+      return;
+    }
+
+    // Create transform node from result
+    vtkNew<vtkMatrix4x4> vtkMatrix;
+    transform->GetMatrix().GetVnlMatrix().copy_out(vtkMatrix->GetData());
+
+    vtkNew<vtkMRMLLinearTransformNode> transformNode;
+    transformNode->SetMatrixTransformToParent(vtkMatrix);
+    transformNode->SetName("RegistrationTransform");
+
+    vtkMRMLScene* scene = this->mrmlScene();
+    scene->AddNode(transformNode);
 }
