@@ -2307,6 +2307,6 @@ vtkMRMLLinearTransformNode* vtkSlicerPatientPositioningLogic::ITKTwoProjectionRe
 
   vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(scene->AddNewNodeByClass("vtkMRMLLinearTransformNode"));
   transformNode->SetMatrixTransformToParent(finalMatrix);
-  transformNode->SetName("RegistrationTransform");
+  transformNode->SetName("ITKRegistrationTransform");
   return transformNode;
 }

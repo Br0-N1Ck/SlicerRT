@@ -152,6 +152,7 @@ void qSlicerCarmXrayBeamWidgetPrivate::init()
   QObject::connect(this->PushButton_IsocenterDiffUpdate, SIGNAL(clicked()), q, SLOT(onIsocenterDiffUpdateClicked()));
 
   QObject::connect(this->PushButton_ItkRegister, SIGNAL(clicked()), q, SLOT(onItkRegisterClicked()));
+  QObject::connect(this->PushButton_ApplyTransformToCt, SIGNAL(clicked()), q, SLOT(onApplyTransformToCtClicked()));
 
   q->onTranslateSlidersRangeChanged();
 }
@@ -740,21 +741,43 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
         qCritical() << Q_FUNC_INFO << ": Invalid CT node";
         return;
     }
-    vtkMRMLScalarVolumeNode* drrImageNode_1 = vtkMRMLScalarVolumeNode::SafeDownCast(d->MRMLNodeComboBox_DrrImageNode_1->currentNode());
-    if (!drrImageNode_1)
+    vtkMRMLScalarVolumeNode* xrayImageNode_1 = vtkMRMLScalarVolumeNode::SafeDownCast(d->MRMLNodeComboBox_XrayImageNode_1->currentNode());
+    if (!xrayImageNode_1)
     {
         qCritical() << Q_FUNC_INFO << ": Invalid DRR image 1 node";
         return;
     }
-    vtkMRMLScalarVolumeNode* drrImageNode_2 = vtkMRMLScalarVolumeNode::SafeDownCast(d->MRMLNodeComboBox_DrrImageNode_2->currentNode());
-    if (!drrImageNode_2)
+    vtkMRMLScalarVolumeNode* xrayImageNode_2 = vtkMRMLScalarVolumeNode::SafeDownCast(d->MRMLNodeComboBox_XrayImageNode_2->currentNode());
+    if (!xrayImageNode_2)
     {
         qCritical() << Q_FUNC_INFO << ": Invalid DRR image 2 node";
         return;
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    d->PatientPositioningLogic->ITKTwoProjectionRegistration(ctNode, drrImageNode_1, drrImageNode_2);
+    vtkMRMLLinearTransformNode* transformNode = d->PatientPositioningLogic->ITKTwoProjectionRegistration(ctNode, xrayImageNode_1, xrayImageNode_2);
     QApplication::restoreOverrideCursor();
+    d->MRMLNodeComboBox_RegistrationTransform->setCurrentNode(transformNode);
+    
+}
+
+void qSlicerCarmXrayBeamWidget::onApplyTransformToCtClicked()
+{
+    
+    Q_D(qSlicerCarmXrayBeamWidget);
+    vtkMRMLScalarVolumeNode* ctNode = vtkMRMLScalarVolumeNode::SafeDownCast(d->MRMLNodeComboBox_CTNode->currentNode());
+    if (!ctNode)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid CT node";
+        return;
+    }
+    vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(d->MRMLNodeComboBox_RegistrationTransform->currentNode());
+    if (!transformNode)
+    {
+        qCritical() << Q_FUNC_INFO << ": Invalid Transform Node";
+        return;
+    }
+
+    ctNode->SetAndObserveTransformNodeID(transformNode->GetID());
     
 }
