@@ -753,15 +753,8 @@ void qSlicerCarmXrayBeamWidget::onItkRegisterClicked()
         return;
     }
 
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     d->PatientPositioningLogic->ITKTwoProjectionRegistration(ctNode, drrImageNode_1, drrImageNode_2);
-
-    // TODO: Create transform node from result
-
-    // vtkNew<vtkMatrix4x4> vtkMatrix;
-
-    // vtkNew<vtkMRMLLinearTransformNode> transformNode;
-    // transformNode->SetName("RegistrationTransform");
-
-    // vtkMRMLScene* scene = this->mrmlScene();
-    // scene->AddNode(transformNode);
+    QApplication::restoreOverrideCursor();
+    
 }

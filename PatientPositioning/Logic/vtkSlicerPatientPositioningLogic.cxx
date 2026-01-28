@@ -2053,8 +2053,8 @@ vtkMRMLLinearTransformNode* vtkSlicerPatientPositioningLogic::ITKTwoProjectionRe
   caster3D->SetInput(movingItkImage);
   caster3D->Update();
 
-  registration->SetFixedImage1(fixedItkImage_1);
-  registration->SetFixedImage2(fixedItkImage_2);
+  registration->SetFixedImage1(flipFilter1->GetOutput());
+  registration->SetFixedImage2(flipFilter2->GetOutput());
   registration->SetMovingImage(caster3D->GetOutput());
 
 
@@ -2263,12 +2263,50 @@ vtkMRMLLinearTransformNode* vtkSlicerPatientPositioningLogic::ITKTwoProjectionRe
   std::cout << " Number Of Iterations = " << numberOfIterations << std::endl;
   std::cout << " Metric value  = " << bestValue << std::endl;
 
-  // TODO: Create transform node from result
+  // Create transform node from result
   
-  //vtkNew<vtkMatrix4x4> vtkMatrix;
+  vtkNew<vtkMatrix4x4> vtkMatrix;
+  vtkMatrix->Identity();
 
-  vtkNew<vtkMRMLLinearTransformNode> transformNode;
+  TransformType::Pointer finalTransform = TransformType::New();
+  finalTransform->SetCenter(transform->GetCenter());
+  finalTransform->SetParameters(finalParameters);
+
+  TransformType::MatrixType rotation = finalTransform->GetMatrix();
+  TransformType::OffsetType translation = finalTransform->GetTranslation();
+
+  // Fill the VTK matrix
+  for (int i = 0; i < 3; ++i)
+  {
+      for (int j = 0; j < 3; ++j)
+      {
+          vtkMatrix->SetElement(i, j, rotation(i, j));
+      }
+      vtkMatrix->SetElement(i, 3, translation[i]);
+  }
+
+  // LPS to RAS
+
+  vtkNew<vtkMatrix4x4> lpsToRas;
+  lpsToRas->Identity();
+  lpsToRas->SetElement(0, 0, -1.0); // L -> R
+  lpsToRas->SetElement(1, 1, -1.0); // P -> A
+
+  vtkNew<vtkMatrix4x4> finalMatrix;
+  vtkMatrix4x4::Multiply4x4(lpsToRas, vtkMatrix, finalMatrix);
+  vtkMatrix4x4::Multiply4x4(finalMatrix, lpsToRas, finalMatrix);
+
+  // Add to scene
+
+  vtkMRMLScene* scene = this->GetMRMLScene();
+  if (!scene)
+  {
+      vtkErrorMacro("ITKTwoProjectionRegistration: Invalid MRML scene");
+      return nullptr;
+  }
+
+  vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(scene->AddNewNodeByClass("vtkMRMLLinearTransformNode"));
+  transformNode->SetMatrixTransformToParent(finalMatrix);
   transformNode->SetName("RegistrationTransform");
-
   return transformNode;
 }
