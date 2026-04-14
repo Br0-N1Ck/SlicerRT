@@ -57,7 +57,7 @@ namespace
 
 const char* const SCANSPOT_REFERENCE_ROLE = "ScanSpotRef";
 static const char* RANGE_SHIFTER_REFERENCE_ROLE = "RangeShifterRef";
-constexpr double FWHM_TO_SIGMA = 1. / (2. * sqrt(2. * log(2.)));
+constexpr double FWHM_TO_SIGMA = 0.42466090014400953; // 1 / (2 * sqrt(2 * log(2)))
 constexpr int POINTS_PER_SCANSPOT = 60;
 
 } // namespace
