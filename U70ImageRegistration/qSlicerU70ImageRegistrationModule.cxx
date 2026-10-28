@@ -33,7 +33,9 @@ public:
 // qSlicerU70ImageRegistrationModulePrivate methods
 
 //-----------------------------------------------------------------------------
-qSlicerU70ImageRegistrationModulePrivate::qSlicerU70ImageRegistrationModulePrivate() {}
+qSlicerU70ImageRegistrationModulePrivate::qSlicerU70ImageRegistrationModulePrivate()
+{
+}
 
 //-----------------------------------------------------------------------------
 // qSlicerU70ImageRegistrationModule methods
@@ -46,7 +48,9 @@ qSlicerU70ImageRegistrationModule::qSlicerU70ImageRegistrationModule(QObject* _p
 }
 
 //-----------------------------------------------------------------------------
-qSlicerU70ImageRegistrationModule::~qSlicerU70ImageRegistrationModule() {}
+qSlicerU70ImageRegistrationModule::~qSlicerU70ImageRegistrationModule()
+{
+}
 
 //-----------------------------------------------------------------------------
 QString qSlicerU70ImageRegistrationModule::helpText() const
@@ -57,14 +61,14 @@ QString qSlicerU70ImageRegistrationModule::helpText() const
 //-----------------------------------------------------------------------------
 QString qSlicerU70ImageRegistrationModule::acknowledgementText() const
 {
-  return tr("This work was partially funded by NIH grant NXNNXXNNNNNN-NNXN");
+  return "This work was partially funded by NIH grant NXNNXXNNNNNN-NNXN";
 }
 
 //-----------------------------------------------------------------------------
 QStringList qSlicerU70ImageRegistrationModule::contributors() const
 {
   QStringList moduleContributors;
-  moduleContributors << tr("Mikhail Polkovnikov");
+  moduleContributors << QString("John Doe (AnyWare Corp.)");
   return moduleContributors;
 }
 
@@ -85,7 +89,6 @@ QStringList qSlicerU70ImageRegistrationModule::dependencies() const
 {
   return QStringList();
 }
-
 //-----------------------------------------------------------------------------
 QString qSlicerU70ImageRegistrationModule::title() const
 {
@@ -99,7 +102,8 @@ void qSlicerU70ImageRegistrationModule::setup()
 }
 
 //-----------------------------------------------------------------------------
-qSlicerAbstractModuleRepresentation* qSlicerU70ImageRegistrationModule::createWidgetRepresentation()
+qSlicerAbstractModuleRepresentation* qSlicerU70ImageRegistrationModule
+::createWidgetRepresentation()
 {
   return new qSlicerU70ImageRegistrationModuleWidget;
 }

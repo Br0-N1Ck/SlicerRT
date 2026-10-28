@@ -1,7 +1,7 @@
-#ifndef __vtkMRMLImagePositioningNode_h
-#define __vtkMRMLImagePositioningNode_h
+#ifndef __vtkMRMLU70ImageRegistrationNode_h
+#define __vtkMRMLU70ImageRegistrationNode_h
 
-#include "vtkSlicerImagePositioningModuleMRMLExport.h"
+#include "vtkSlicerU70ImageRegistrationModuleMRMLExport.h"
 
 
 // MRML includes
@@ -11,7 +11,7 @@
 #include <vtkMRMLLinearTransformNode.h>
 #include <vtkMRMLScalarVolumeNode.h>
 
-class VTK_SLICER_IMAGEPOSITIONING_MODULE_MRML_EXPORT vtkMRMLImagePositioningNode : public vtkMRMLNode
+class VTK_SLICER_U70IMAGEREGISTRATION_MODULE_MRML_EXPORT vtkMRMLU70ImageRegistrationNode : public vtkMRMLNode
 {
 public:
     enum OrientationType
@@ -20,8 +20,8 @@ public:
       OrientationVertical = 1
     };
 
-    static vtkMRMLImagePositioningNode* New();
-    vtkTypeMacro(vtkMRMLImagePositioningNode, vtkMRMLNode);
+    static vtkMRMLU70ImageRegistrationNode* New();
+    vtkTypeMacro(vtkMRMLU70ImageRegistrationNode, vtkMRMLNode);
     void PrintSelf(ostream& os, vtkIndent indent) override;
     /// Create instance of a GAD node.
     vtkMRMLNode* CreateNodeInstance() override;
@@ -37,11 +37,11 @@ public:
     void Copy(vtkMRMLNode* node) override;
 
     /// Copy node content (excludes basic data, such a name and node reference)
-    vtkMRMLCopyContentMacro(vtkMRMLImagePositioningNode);
+    vtkMRMLCopyContentMacro(vtkMRMLU70ImageRegistrationNode);
 
 
     /// Get unique node XML tag name
-    const char* GetNodeTagName() override { return "ImagePositioning"; };
+    const char* GetNodeTagName() override { return "U70ImageRegistration"; };
 
     /// Handles events registered in the observer manager
 //    void ProcessMRMLEvents(vtkObject *caller, unsigned long eventID, void *callData) override;
@@ -66,10 +66,10 @@ public:
  //   vtkSetMacro(Height, double);
 
   protected:
-    vtkMRMLImagePositioningNode();
-    virtual ~vtkMRMLImagePositioningNode();
-    vtkMRMLImagePositioningNode(const vtkMRMLImagePositioningNode&);
-    void operator=(const vtkMRMLImagePositioningNode&);
+    vtkMRMLU70ImageRegistrationNode();
+    virtual ~vtkMRMLU70ImageRegistrationNode();
+    vtkMRMLU70ImageRegistrationNode(const vtkMRMLU70ImageRegistrationNode&);
+    void operator=(const vtkMRMLU70ImageRegistrationNode&);
 };
 
 #endif

@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "vtkMRMLImagePositioningNode.h"
+#include "vtkMRMLU70ImageRegistrationNode.h"
 
 //------------------------------------------------------------------------------
 namespace
@@ -29,9 +29,9 @@ namespace
 }
 
 //------------------------------------------------------------------------------
-vtkMRMLNodeNewMacro(vtkMRMLImagePositioningNode);
+vtkMRMLNodeNewMacro(vtkMRMLU70ImageRegistrationNode);
 
-vtkMRMLImagePositioningNode::vtkMRMLImagePositioningNode()
+vtkMRMLU70ImageRegistrationNode::vtkMRMLU70ImageRegistrationNode()
 {
  //   vtkNew< vtkTransform > horizTransform, verticalTransform, horizScale, verticalScale;
  //   horizTransform->Identity();
@@ -41,7 +41,7 @@ vtkMRMLImagePositioningNode::vtkMRMLImagePositioningNode()
 }
 
 //----------------------------------------------------------------------------
-vtkMRMLImagePositioningNode::~vtkMRMLImagePositioningNode()
+vtkMRMLU70ImageRegistrationNode::~vtkMRMLU70ImageRegistrationNode()
 {
     this->SetAndObserveHorizontalTransformNode(nullptr);
     this->SetAndObserveVerticalTransformNode(nullptr);
@@ -51,7 +51,7 @@ vtkMRMLImagePositioningNode::~vtkMRMLImagePositioningNode()
     this->SetAndObserveXrayNode(nullptr);
 }
 
-void vtkMRMLImagePositioningNode::WriteXML(ostream& of, int nIndent)
+void vtkMRMLU70ImageRegistrationNode::WriteXML(ostream& of, int nIndent)
 {
     Superclass::WriteXML(of, nIndent);
 
@@ -64,7 +64,7 @@ void vtkMRMLImagePositioningNode::WriteXML(ostream& of, int nIndent)
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLImagePositioningNode::ReadXMLAttributes(const char** atts)
+void vtkMRMLU70ImageRegistrationNode::ReadXMLAttributes(const char** atts)
 {
     int disabledModify = this->StartModify();
     vtkMRMLNode::ReadXMLAttributes(atts);
@@ -83,13 +83,13 @@ void vtkMRMLImagePositioningNode::ReadXMLAttributes(const char** atts)
 
 //----------------------------------------------------------------------------
 // Copy the node's attributes to this object.
-void vtkMRMLImagePositioningNode::Copy(vtkMRMLNode* anode)
+void vtkMRMLU70ImageRegistrationNode::Copy(vtkMRMLNode* anode)
 {
     int disabledModify = this->StartModify();
 
     Superclass::Copy(anode);
 
-    vtkMRMLImagePositioningNode* node = vtkMRMLImagePositioningNode::SafeDownCast(anode);
+    vtkMRMLU70ImageRegistrationNode* node = vtkMRMLU70ImageRegistrationNode::SafeDownCast(anode);
     if (!node)
     {
         return;
@@ -108,12 +108,12 @@ void vtkMRMLImagePositioningNode::Copy(vtkMRMLNode* anode)
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLImagePositioningNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/*=true*/)
+void vtkMRMLU70ImageRegistrationNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/*=true*/)
 {
     MRMLNodeModifyBlocker blocker(this);
     Superclass::CopyContent(anode, deepCopy);
 
-    vtkMRMLImagePositioningNode* node = vtkMRMLImagePositioningNode::SafeDownCast(anode);
+    vtkMRMLU70ImageRegistrationNode* node = vtkMRMLU70ImageRegistrationNode::SafeDownCast(anode);
     if (!node)
     {
         return;
@@ -125,7 +125,7 @@ void vtkMRMLImagePositioningNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/
     vtkMRMLCopyEndMacro();
 }
 
-void vtkMRMLImagePositioningNode::PrintSelf(ostream& os, vtkIndent indent)
+void vtkMRMLU70ImageRegistrationNode::PrintSelf(ostream& os, vtkIndent indent)
 {
     Superclass::PrintSelf(os, indent);
 
@@ -144,7 +144,7 @@ void vtkMRMLImagePositioningNode::PrintSelf(ostream& os, vtkIndent indent)
 
 }
 /*
-void vtkMRMLImagePositioningNode::ProcessMRMLEvents(vtkObject *caller, unsigned long eventID, void *callData)
+void vtkMRMLU70ImageRegistrationNode::ProcessMRMLEvents(vtkObject *caller, unsigned long eventID, void *callData)
 {
   Superclass::ProcessMRMLEvents(caller, eventID, callData);
 
@@ -161,52 +161,52 @@ void vtkMRMLImagePositioningNode::ProcessMRMLEvents(vtkObject *caller, unsigned 
 }
 */
 
-int vtkMRMLImagePositioningNode::GetActiveOrientation()
+int vtkMRMLU70ImageRegistrationNode::GetActiveOrientation()
 {
     const char* orientationAttributeValue = this->GetAttribute(ACTIVE_ORIENTATION_ATTRIBUTE_NAME);
     if (!orientationAttributeValue)
     {
-      return vtkMRMLImagePositioningNode::OrientationHorizontal;
+      return vtkMRMLU70ImageRegistrationNode::OrientationHorizontal;
     }
     return atoi(orientationAttributeValue);
 }
 
-vtkMRMLLinearTransformNode* vtkMRMLImagePositioningNode::GetHorizontalTransformNode()
+vtkMRMLLinearTransformNode* vtkMRMLU70ImageRegistrationNode::GetHorizontalTransformNode()
 {
     return vtkMRMLLinearTransformNode::SafeDownCast(this->GetNodeReference(HORIZONTAL_TRANSFORM_NODE_REFERENCE_ROLE));
 }
 
-vtkMRMLLinearTransformNode* vtkMRMLImagePositioningNode::GetVerticalTransformNode()
+vtkMRMLLinearTransformNode* vtkMRMLU70ImageRegistrationNode::GetVerticalTransformNode()
 {
     return vtkMRMLLinearTransformNode::SafeDownCast(this->GetNodeReference(VERTICAL_TRANSFORM_NODE_REFERENCE_ROLE));
 }
 
-vtkMRMLLinearTransformNode* vtkMRMLImagePositioningNode::GetHorizontalScaleNode()
+vtkMRMLLinearTransformNode* vtkMRMLU70ImageRegistrationNode::GetHorizontalScaleNode()
 {
     return vtkMRMLLinearTransformNode::SafeDownCast(this->GetNodeReference(HORIZONTAL_SCALE_NODE_REFERENCE_ROLE));
 }
 
-vtkMRMLLinearTransformNode* vtkMRMLImagePositioningNode::GetVerticalScaleNode()
+vtkMRMLLinearTransformNode* vtkMRMLU70ImageRegistrationNode::GetVerticalScaleNode()
 {
     return vtkMRMLLinearTransformNode::SafeDownCast(this->GetNodeReference(VERTICAL_SCALE_NODE_REFERENCE_ROLE));
 }
-vtkMRMLScalarVolumeNode* vtkMRMLImagePositioningNode::GetDrrNode()
+vtkMRMLScalarVolumeNode* vtkMRMLU70ImageRegistrationNode::GetDrrNode()
 {
     return vtkMRMLScalarVolumeNode::SafeDownCast(this->GetNodeReference(DRR_NODE_REFERENCE_ROLE));
 }
 
-vtkMRMLScalarVolumeNode* vtkMRMLImagePositioningNode::GetXrayNode()
+vtkMRMLScalarVolumeNode* vtkMRMLU70ImageRegistrationNode::GetXrayNode()
 {
     return vtkMRMLScalarVolumeNode::SafeDownCast(this->GetNodeReference(XRAY_NODE_REFERENCE_ROLE));
 }
 
 
-void vtkMRMLImagePositioningNode::SetActiveOrientation(int orientation)
+void vtkMRMLU70ImageRegistrationNode::SetActiveOrientation(int orientation)
 {
     this->SetAttribute(ACTIVE_ORIENTATION_ATTRIBUTE_NAME, std::to_string(orientation).c_str());
 }
 
-void vtkMRMLImagePositioningNode::SetAndObserveHorizontalTransformNode(vtkMRMLLinearTransformNode* node)
+void vtkMRMLU70ImageRegistrationNode::SetAndObserveHorizontalTransformNode(vtkMRMLLinearTransformNode* node)
 {
     if (node && this->Scene != node->GetScene())
     {
@@ -217,7 +217,7 @@ void vtkMRMLImagePositioningNode::SetAndObserveHorizontalTransformNode(vtkMRMLLi
     this->SetNodeReferenceID(HORIZONTAL_TRANSFORM_NODE_REFERENCE_ROLE, (node ? node->GetID() : nullptr));
 }
 
-void vtkMRMLImagePositioningNode::SetAndObserveVerticalTransformNode(vtkMRMLLinearTransformNode* node)
+void vtkMRMLU70ImageRegistrationNode::SetAndObserveVerticalTransformNode(vtkMRMLLinearTransformNode* node)
 {
     if (node && this->Scene != node->GetScene())
     {
@@ -228,7 +228,7 @@ void vtkMRMLImagePositioningNode::SetAndObserveVerticalTransformNode(vtkMRMLLine
     this->SetNodeReferenceID(VERTICAL_TRANSFORM_NODE_REFERENCE_ROLE, (node ? node->GetID() : nullptr));
 }
 
-void vtkMRMLImagePositioningNode::SetAndObserveHorizontalScaleNode(vtkMRMLLinearTransformNode* node)
+void vtkMRMLU70ImageRegistrationNode::SetAndObserveHorizontalScaleNode(vtkMRMLLinearTransformNode* node)
 {
     if (node && this->Scene != node->GetScene())
     {
@@ -238,7 +238,7 @@ void vtkMRMLImagePositioningNode::SetAndObserveHorizontalScaleNode(vtkMRMLLinear
     this->SetNodeReferenceID(HORIZONTAL_SCALE_NODE_REFERENCE_ROLE, (node ? node->GetID() : nullptr));
 }
 
-void vtkMRMLImagePositioningNode::SetAndObserveVerticalScaleNode(vtkMRMLLinearTransformNode* node)
+void vtkMRMLU70ImageRegistrationNode::SetAndObserveVerticalScaleNode(vtkMRMLLinearTransformNode* node)
 {
     if (node && this->Scene != node->GetScene())
     {
@@ -247,7 +247,7 @@ void vtkMRMLImagePositioningNode::SetAndObserveVerticalScaleNode(vtkMRMLLinearTr
     }
     this->SetNodeReferenceID(VERTICAL_SCALE_NODE_REFERENCE_ROLE, (node ? node->GetID() : nullptr));
 }
-void vtkMRMLImagePositioningNode::SetAndObserveDrrNode(vtkMRMLScalarVolumeNode* node)
+void vtkMRMLU70ImageRegistrationNode::SetAndObserveDrrNode(vtkMRMLScalarVolumeNode* node)
 {
     if (node && this->Scene != node->GetScene())
     {
@@ -258,7 +258,7 @@ void vtkMRMLImagePositioningNode::SetAndObserveDrrNode(vtkMRMLScalarVolumeNode* 
     this->SetNodeReferenceID(DRR_NODE_REFERENCE_ROLE, (node ? node->GetID() : nullptr));
 }
 
-void vtkMRMLImagePositioningNode::SetAndObserveXrayNode(vtkMRMLScalarVolumeNode* node)
+void vtkMRMLU70ImageRegistrationNode::SetAndObserveXrayNode(vtkMRMLScalarVolumeNode* node)
 {
     if (node && this->Scene != node->GetScene())
     {

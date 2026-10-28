@@ -23,21 +23,33 @@
 
 // Qt includes
 #include <QWidget>
+#include <qSlicerWidget.h>
 
 // FooBar Widgets includes
 #include "qSlicerU70ImageRegistrationModuleWidgetsExport.h"
 
 class qSlicerU70ImageRegistrationFooBarWidgetPrivate;
+class vtkMRMLScalarVolumeNode;
 
-class Q_SLICER_MODULE_U70IMAGEREGISTRATION_WIDGETS_EXPORT qSlicerU70ImageRegistrationFooBarWidget : public QWidget
+class Q_SLICER_MODULE_U70IMAGEREGISTRATION_WIDGETS_EXPORT qSlicerU70ImageRegistrationFooBarWidget
+  : public QWidget
 {
   Q_OBJECT
 public:
   typedef QWidget Superclass;
-  qSlicerU70ImageRegistrationFooBarWidget(QWidget* parent = 0);
+  qSlicerU70ImageRegistrationFooBarWidget(QWidget *parent=0);
   ~qSlicerU70ImageRegistrationFooBarWidget() override;
 
+  void setXrayNode(vtkMRMLScalarVolumeNode* xrayNode);
+
 protected slots:
+  void onMoveUpClicked();
+  void onMoveDownClicked();
+  void onMoveLeftClicked();
+  void onMoveRightClicked();
+
+  void onTranslateSlidersValuesChanged();
+  void onTranslateSlidersRangeChanged();
 
 protected:
   QScopedPointer<qSlicerU70ImageRegistrationFooBarWidgetPrivate> d_ptr;

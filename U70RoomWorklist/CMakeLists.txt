@@ -32,7 +32,7 @@ set(MODULE_SRCS
 
 set(MODULE_UI_SRCS
   Resources/UI/qSlicer${MODULE_NAME}ModuleWidget.ui
-  Resources/UI/qSlicerPatientQueueWidget.ui
+  Resources/UI/qSlicerPatientsQueueWidget.ui
   )
 
 set(MODULE_TARGET_LIBRARIES

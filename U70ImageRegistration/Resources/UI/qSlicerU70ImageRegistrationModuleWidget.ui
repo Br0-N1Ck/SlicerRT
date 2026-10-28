@@ -6,14 +6,43 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>548</width>
-    <height>890</height>
+    <width>519</width>
+    <height>1010</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>U70ImageRegistration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout_6">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Parameter node:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="qMRMLNodeComboBox" name="MRMLNodeComboBox_ParameterSet">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="nodeTypes">
+        <stringlist notr="true">
+         <string>vtkMRMLU70ImageRegistrationNode</string>
+        </stringlist>
+       </property>
+       <property name="hideChildNodeTypes">
+        <stringlist notr="true"/>
+       </property>
+       <property name="interactionNodeSingletonTag">
+        <string notr="true"/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
    <item>
     <widget class="ctkCollapsibleButton" name="CollapsibleButton">
      <property name="text">
@@ -116,6 +145,19 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="PushButton_CustomLayout">
+     <property name="text">
+      <string>Set custom layout</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string/>
@@ -176,6 +218,85 @@
        </layout>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>C-arm x-ray beam orientation</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QPushButton" name="PushButton_HorizontalOrientation">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Horizontal</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="PushButton_VerticalOrientation">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Vertical</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <attribute name="buttonGroup">
+           <string notr="true">buttonGroup</string>
+          </attribute>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="PushButton_SetView">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>40</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Set X-ray node and slice view for registration</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
     </widget>
    </item>
    <item>
@@ -430,7 +551,7 @@
               <item row="1" column="0">
                <widget class="QLabel" name="label_6">
                 <property name="text">
-                 <string>Clockwise:</string>
+                 <string>CW-CCW</string>
                 </property>
                </widget>
               </item>
@@ -457,7 +578,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>:/Icons/go-down.png</normaloff>:/Icons/go-down.png</iconset>
+            <normaloff>../Icons/go-down.png</normaloff>../Icons/go-down.png</iconset>
           </property>
          </widget>
         </item>
@@ -474,7 +595,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>:/Icons/go-up.png</normaloff>:/Icons/go-up.png</iconset>
+            <normaloff>../Icons/go-up.png</normaloff>../Icons/go-up.png</iconset>
           </property>
          </widget>
         </item>
@@ -491,7 +612,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>:/Icons/go-next.png</normaloff>:/Icons/go-next.png</iconset>
+            <normaloff>../Icons/go-next.png</normaloff>../Icons/go-next.png</iconset>
           </property>
          </widget>
         </item>
@@ -508,7 +629,7 @@
           </property>
           <property name="icon">
            <iconset>
-            <normaloff>:/Icons/go-previous.png</normaloff>:/Icons/go-previous.png</iconset>
+            <normaloff>../Icons/go-previous.png</normaloff>../Icons/go-previous.png</iconset>
           </property>
          </widget>
         </item>
@@ -567,28 +688,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ctkCollapsibleButton</class>
-   <extends>QWidget</extends>
-   <header>ctkCollapsibleButton.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ctkCollapsibleGroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>ctkCollapsibleGroupBox.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ctkMatrixWidget</class>
-   <extends>QWidget</extends>
-   <header>ctkMatrixWidget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ctkSliderWidget</class>
-   <extends>QWidget</extends>
-   <header>ctkSliderWidget.h</header>
-  </customwidget>
-  <customwidget>
    <class>qMRMLMatrixWidget</class>
    <extends>ctkMatrixWidget</extends>
    <header>qMRMLMatrixWidget.h</header>
@@ -610,7 +709,81 @@
    <header>qSlicerWidget.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkCollapsibleGroupBox</class>
+   <extends>QGroupBox</extends>
+   <header>ctkCollapsibleGroupBox.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkMatrixWidget</class>
+   <extends>QWidget</extends>
+   <header>ctkMatrixWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ctkSliderWidget</class>
+   <extends>QWidget</extends>
+   <header>ctkSliderWidget.h</header>
+  </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>qSlicerU70ImageRegistrationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>MRMLNodeComboBox_DrrImage</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>213</x>
+     <y>299</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>253</x>
+     <y>21</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerU70ImageRegistrationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>MRMLNodeComboBox_XrayImage</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>213</x>
+     <y>299</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>253</x>
+     <y>50</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerU70ImageRegistrationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>MRMLNodeComboBox_ParameterSet</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>232</x>
+     <y>450</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>275</x>
+     <y>19</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <buttongroups>
+  <buttongroup name="buttonGroup"/>
+ </buttongroups>
 </ui>

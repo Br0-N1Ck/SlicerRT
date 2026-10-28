@@ -24,23 +24,55 @@
 #include "qSlicerU70ImageRegistrationModuleExport.h"
 
 class qSlicerU70ImageRegistrationModuleWidgetPrivate;
-class vtkMRMLNode;
+class vtkMRMLNode; 
+class vtkMRMLScalarVolumeNode;
 
-class Q_SLICER_QTMODULES_U70IMAGEREGISTRATION_EXPORT qSlicerU70ImageRegistrationModuleWidget : public qSlicerAbstractModuleWidget
+class Q_SLICER_QTMODULES_U70IMAGEREGISTRATION_EXPORT qSlicerU70ImageRegistrationModuleWidget :
+  public qSlicerAbstractModuleWidget
 {
   Q_OBJECT
 
 public:
+
   typedef qSlicerAbstractModuleWidget Superclass;
-  qSlicerU70ImageRegistrationModuleWidget(QWidget* parent = 0);
+  qSlicerU70ImageRegistrationModuleWidget(QWidget *parent=0);
   virtual ~qSlicerU70ImageRegistrationModuleWidget();
 
 public slots:
 
+  void setMRMLScene(vtkMRMLScene*) override;
+  void setParameterNode(vtkMRMLNode*);
+  void onRetrieveDICOMClicked();
+  void onSetViewClicked();
+  void onSetCustomLayoutClicked();
+ // void onHorizontalOrientationClicked();
+ // void onVerticalOrientationClicked();
+  void onDrrImageNodeChanged(vtkMRMLNode* drrImageNode);
+  void onXrayImageNodeChanged(vtkMRMLNode* xrayImageNode);
+//  void onDrrOpacityChanged(double* opacity);
+  void onXrayOpacityChanged(double opacity);
+  void setSliceOrientation();
+  void onMoveUpClicked();
+  void onMoveDownClicked();
+  void onMoveLeftClicked();
+  void onMoveRightClicked();
+  void onRotateClockwiseClicked();
+  void onRotateCounterClockwiseClicked();
+  void onResetTransformClicked();
+  void onHorizontalTransformChanged(double value);
+  void onVerticalTransformChanged(double value);
+  void onRotationTransformChanged(double value);
+  void onScaleXrayImageClicked();
+  void onShowEdgesXrayToggled(bool checked);
+  void onShowEdgesDrrToggled(bool checked);
+
+  void updateWidgetFromMRML();
 protected:
   QScopedPointer<qSlicerU70ImageRegistrationModuleWidgetPrivate> d_ptr;
-
   void setup() override;
+  void setXrayNode(vtkMRMLScalarVolumeNode* xrayNode);
+  void updateXrayTransformFrom2DControls();
+  void sync2DControlsFromActiveOrientation();
 
 private:
   Q_DECLARE_PRIVATE(qSlicerU70ImageRegistrationModuleWidget);

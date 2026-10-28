@@ -1,92 +1,66 @@
-/****************************************************************************
-**
-** Copyright (C) 2018 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt OPC UA module.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
+/*==============================================================================
 
-#ifndef OPCUAMODEL_H
-#define OPCUAMODEL_H
+  Program: 3D Slicer
 
-#include "treeitem.h"
+  Copyright (c) Kitware Inc.
+
+  See COPYRIGHT.txt
+  or http://www.slicer.org/copyright/copyright.txt for details.
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
+  and was partially funded by NIH grant 3P41RR013218-12S1
+
+==============================================================================*/
+
+#ifndef __OpcUaModel_h
+#define __OpcUaModel_h
+
+#include "OpcUaTreeItem.h"
+
 #include <QAbstractItemModel>
 #include <QOpcUaNode>
-#include <memory>
+#include <QScopedPointer>
+#include <QPointer>
 
-QT_BEGIN_NAMESPACE
+// U70RoomOpcUaModule Widgets includes
+#include "qSlicerU70RoomOpcUaModuleWidgetsExport.h"
 
 class QOpcUaClient;
-class TreeItem;
-
-// FooBar Widgets includes
-#include "qSlicerU70RoomOpcUaModuleWidgetsExport.h"
+class OpcUaTreeItem;
 
 class Q_SLICER_MODULE_U70ROOMOPCUA_WIDGETS_EXPORT OpcUaModel : public QAbstractItemModel
 {
   Q_OBJECT
 public:
   OpcUaModel(QObject *parent = nullptr);
-
-  void setOpcUaClient(QOpcUaClient *);
+  void browseStarted();
+  void browseFinished();
+  void setOpcUaClient(QOpcUaClient *, const QString& rootNodeId = QLatin1String("ns=0;i=84"));
   QOpcUaClient* opcUaClient() const;
-
+  void clear();
   QVariant data(const QModelIndex &index, int role) const override;
   QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
   QModelIndex parent(const QModelIndex &index) const override;
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+  OpcUaTreeItem* getRootItem() const { return this->mRootItem.data(); }
 
+signals:
+  void browseProgressChanged(int finished, int started);
 private:
-  QOpcUaClient* mOpcUaClient;
-  std::unique_ptr<TreeItem> mRootItem;
+  QPointer< QOpcUaClient > mOpcUaClient;
+  QScopedPointer< OpcUaTreeItem > mRootItem;
+  int mBrowsesStarted{ 0 };
+  int mBrowsesFinished{ 0 };
 
-  friend class TreeItem;
+  friend class OpcUaTreeItem;
 };
 
-QT_END_NAMESPACE
-
-#endif // OPCUAMODEL_H
+#endif

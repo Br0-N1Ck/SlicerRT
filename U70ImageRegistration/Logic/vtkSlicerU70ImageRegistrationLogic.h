@@ -20,6 +20,7 @@
 // This class manages the logic associated with reading, saving,
 // and changing propertied of the volumes
 
+
 #ifndef __vtkSlicerU70ImageRegistrationLogic_h
 #define __vtkSlicerU70ImageRegistrationLogic_h
 
@@ -27,18 +28,36 @@
 #include "vtkSlicerModuleLogic.h"
 
 // MRML includes
+class vtkMRMLU70ImageRegistrationNode;
+class vtkMRMLScalarVolumeNode;
+class vtkMRMLLinearTransformNode;
 
 // STD includes
 #include <cstdlib>
 
 #include "vtkSlicerU70ImageRegistrationModuleLogicExport.h"
 
-class VTK_SLICER_U70IMAGEREGISTRATION_MODULE_LOGIC_EXPORT vtkSlicerU70ImageRegistrationLogic : public vtkSlicerModuleLogic
+
+class VTK_SLICER_U70IMAGEREGISTRATION_MODULE_LOGIC_EXPORT vtkSlicerU70ImageRegistrationLogic :
+  public vtkSlicerModuleLogic
 {
 public:
-  static vtkSlicerU70ImageRegistrationLogic* New();
+
+  static vtkSlicerU70ImageRegistrationLogic *New();
   vtkTypeMacro(vtkSlicerU70ImageRegistrationLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent) override;
+
+  vtkMRMLU70ImageRegistrationNode* GetOrCreateU70ImageRegistrationNode();
+ // void SetDrrNode(vtkMRMLScalarVolumeNode* drrNode);
+  void SetXrayNode(vtkMRMLScalarVolumeNode* xrayNode);
+  void SetActiveOrientation(int orientation);
+  vtkMRMLLinearTransformNode* GetActiveXrayTransformNode();
+  vtkMRMLLinearTransformNode* GetActiveXrayScaleNode();
+  void ApplyXray2DTransform(double horizontalOffsetMm, double verticalOffsetMm, double rotationDeg, int orientation);
+  /// Align Xray along slice normal to match DRR plane and scale it
+  /// by sourceToIsocenterMm/sourceToImagerMm.
+  void AlignAndScaleXrayToDrr(double sourceToImagerMm);
+  vtkMRMLScalarVolumeNode* GetOrCreateImageWithGradientFilter(vtkMRMLScalarVolumeNode* inputVolume);
 
 protected:
   vtkSlicerU70ImageRegistrationLogic();
@@ -50,10 +69,10 @@ protected:
   void UpdateFromMRMLScene() override;
   void OnMRMLSceneNodeAdded(vtkMRMLNode* node) override;
   void OnMRMLSceneNodeRemoved(vtkMRMLNode* node) override;
-
 private:
+
   vtkSlicerU70ImageRegistrationLogic(const vtkSlicerU70ImageRegistrationLogic&); // Not implemented
-  void operator=(const vtkSlicerU70ImageRegistrationLogic&);            // Not implemented
+  void operator=(const vtkSlicerU70ImageRegistrationLogic&); // Not implemented
 };
 
 #endif
